@@ -4,7 +4,7 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const session = require('express-session');
-const MongoStore = require('connect-mongo'); // Import connect-mongo
+const MongoStore = require('connect-mongo');
 const http = require('http');
 const { Server } = require('socket.io');
 const connectDB = require('./config/database');
@@ -49,6 +49,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // UPDATE THIS SESSION CONFIGURATION
+app.set('trust proxy', 1); // IMPORTANT: Add this line for production
 app.use(session({
     secret: process.env.SESSION_SECRET || 'fallbacksecret',
     resave: false,
