@@ -26,63 +26,61 @@ const registerUser = async (req, res) => {
       user = new User({ email });
     }
 
-    // Case 3: Update details for new or existing (but unverified) user
+    // Prepare user data but DO NOT save yet
     user.set({ name, password, institute, role, batch, contact });
+    const otp = crypto.randomInt(100000, 999999).toString();
     user.verification = {
         status: 'pending_email',
-        otp: crypto.randomInt(100000, 999999).toString(),
+        otp: otp,
         otpExpires: Date.now() + 10 * 60 * 1000 // OTP expires in 10 minutes
     };
-    await user.save();
     
     const message = `Your verification code is: ${user.verification.otp}`;
+    
+    // --- START: CRITICAL LOGIC CHANGE ---
+    // First, try to send the email.
     await sendEmail({ email: user.email, subject: 'Alumni Connect - Email Verification', message });
-
+    
+    // Only if the email is sent successfully, save the user to the database.
+    await user.save();
+    
+    // Then, redirect to the OTP verification page.
     res.redirect(`/verify?email=${encodeURIComponent(user.email)}`);
+    // --- END: CRITICAL LOGIC CHANGE ---
+
   } catch (error) {
+    // This will now catch the email failure and show a clear error to the user without saving the user.
     console.error('Registration Error:', error);
-    res.render('login', { error: 'Could not send verification email. Please check server credentials.' });
+    res.render('login', { error: 'Could not send verification email. Please check your credentials and Google Account security settings.' });
   }
 };
 
 // Path 2: Register with personal email and document
 const registerWithDocument = async (req, res) => {
     const { name, email, password, institute, batch, branch, contact } = req.body;
-
     try {
         if (!req.file) {
             return res.render('register-document', { error: 'Verification document is required.' });
         }
-
         const userExists = await User.findOne({ email });
         if (userExists) {
             return res.render('register-document', { error: 'A user with this email already exists.' });
         }
-
         const user = new User({
-            name,
-            email, // Personal email
-            password,
-            institute,
-            batch,
-            branch,
-            contact,
-            role: 'alumni', // This path is only for alumni
+            name, email, password, institute, batch, branch, contact,
+            role: 'alumni',
             verification: {
                 status: 'pending_approval',
-                documentUrl: req.file.path // URL from Cloudinary
+                documentUrl: req.file.path
             }
         });
         await user.save();
-        
-        res.send('<h1>Thank you!</h1><p>Your registration has been submitted and is pending admin approval. You will be notified via email once your account is verified.</p><a href="/login">Back to Login</a>');
-
+        res.send('<h1>Thank you!</h1><p>Your registration is pending admin approval. You will be notified via email.</p><a href="/login">Back to Login</a>');
     } catch (error) {
         console.error('Document Registration Error:', error);
         res.render('register-document', { error: 'An error occurred during registration.' });
     }
 };
-
 
 const verifyUser = async (req, res) => {
     const { email, otp } = req.body;
@@ -92,20 +90,17 @@ const verifyUser = async (req, res) => {
             'verification.otp': otp,
             'verification.otpExpires': { $gt: Date.now() }
         });
-
         if (!user) {
             return res.render('verify', { email, error: 'Invalid or expired OTP.' });
         }
-
         user.verification.status = 'verified';
         user.verification.otp = undefined;
         user.verification.otpExpires = undefined;
         await user.save();
-
         req.session.userId = user._id;
         res.redirect('/profile');
     } catch (error) {
-        res.render('verify', { email, error: 'An server error occurred.' });
+        res.render('verify', { email, error: 'A server error occurred.' });
     }
 };
 
@@ -115,13 +110,11 @@ const loginUser = async (req, res) => {
     const user = await User.findOne({ email });
 
     if (user && (await user.matchPassword(password))) {
-      
       if (user.verification.status !== 'verified') {
           let errorMsg = 'Your account is not verified.';
           if (user.verification.status === 'pending_approval') {
               errorMsg = 'Your account is pending admin approval.';
           } else if (user.verification.status === 'pending_email') {
-              // Resend OTP logic could be added here if desired
               res.redirect(`/verify?email=${encodeURIComponent(user.email)}`);
               return;
           }
