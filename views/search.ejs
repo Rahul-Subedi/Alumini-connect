@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Alumni Directory - Multi-Institute</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+    <style>
+      html, body {
+            overscroll-behavior-y: none;
+        }
+        body { font-family: 'Poppins', sans-serif; }
+        .background-image {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
+            background-image: url('https://images.unsplash.com/photo-1591123120675-6f7f1aae0e5b?q=80&w=2069&auto=format&fit=crop');
+            background-size: cover; background-position: center;
+            filter: blur(4px) brightness(0.5); z-index: -1;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .alumni-card { animation: fadeIn 0.5s ease-out; }
+    </style>
+</head>
+<body class="bg-slate-900 text-white antialiased">
+    <%- include('partials/navbar', { isLoggedIn: true }) %>
+
+    <div class="background-image"></div>
+
+    <div class="relative min-h-screen container mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <header class="text-center mb-12">
+            <h1 class="text-4xl md:text-5xl font-bold tracking-tight text-white" style="text-shadow: 2px 2px 8px rgba(0,0,0,0.7);">Alumni & Student Directory</h1>
+            <p class="mt-4 text-lg text-slate-300 max-w-2xl mx-auto" style="text-shadow: 1px 1px 4px rgba(0,0,0,0.7);">
+                Find and connect with peers from our elite network of institutions.
+            </p>
+        </header>
+
+        <div class="mb-10 p-6 bg-slate-800/50 backdrop-blur-lg border border-sky-400/20 rounded-xl shadow-2xl">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 items-end">
+                <div>
+                    <label for="search-input" class="block text-sm font-medium text-slate-300 mb-1">Search by Name</label>
+                    <input type="text" id="search-input" class="w-full bg-slate-700/50 border border-slate-600 rounded-md p-2 text-white focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none"/>
+                </div>
+                <div>
+                    <label for="institute-filter" class="block text-sm font-medium text-slate-300 mb-1">Institute</label>
+                    <select id="institute-filter" class="w-full bg-slate-700/50 border border-slate-600 rounded-md p-2 text-white focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none">
+                        <option value="">All Institutes</option>
+                        <option value="IIT Bombay">IIT Bombay</option>
+                        <option value="IIT Delhi">IIT Delhi</option>
+                        <option value="NIT Durgapur">NIT Durgapur</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="branch-filter" class="block text-sm font-medium text-slate-300 mb-1">Branch</label>
+                    <select id="branch-filter" class="w-full bg-slate-700/50 border border-slate-600 rounded-md p-2 text-white focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none">
+                        <option value="">All Branches</option>
+                        <option value="Computer Science Engineering">Computer Science</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="batch-filter" class="block text-sm font-medium text-slate-300 mb-1">Batch / Year</label>
+                    <input type="text" id="batch-filter" class="w-full bg-slate-700/50 border border-slate-600 rounded-md p-2 text-white focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none"/>
+                </div>
+                <div>
+                    <label for="company-input" class="block text-sm font-medium text-slate-300 mb-1">Company</label>
+                    <input type="text" id="company-input" class="w-full bg-slate-700/50 border border-slate-600 rounded-md p-2 text-white focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none"/>
+                </div>
+                <div>
+                    <button id="reset-filters" class="w-full bg-sky-600 hover:bg-sky-500 text-white font-semibold py-2 px-4 rounded-lg shadow-lg">
+                        Reset
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <main id="alumni-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8"></main>
+        <div id="no-results" class="text-center py-16 hidden">
+            <i class="fas fa-search-minus fa-4x text-slate-500 mb-4"></i>
+            <h2 class="text-3xl font-semibold text-white">No Alumni Found</h2>
+            <p class="text-slate-400 mt-2">Try adjusting your search filters.</p>
+        </div>
+    </div>
+
+    <div id="connect-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 hidden animate-fade-in-fast">
+        <div class="relative mx-auto p-8 border w-full max-w-md shadow-lg rounded-2xl bg-slate-800 text-white border-slate-700">
+            <div id="modal-content" class="text-center"></div>
+            <button onclick="closeConnectModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-2xl">&times;</button>
+        </div>
+    </div>
+
+    <script>
+        // Your entire existing JavaScript functionality remains here, unchanged.
+        const alumniGrid = document.getElementById('alumni-grid');
+        const noResults = document.getElementById('no-results');
+        const searchInput = document.getElementById('search-input');
+        const instituteFilter = document.getElementById('institute-filter');
+        const branchFilter = document.getElementById('branch-filter');
+        const batchFilter = document.getElementById('batch-filter');
+        const companyInput = document.getElementById('company-input');
+        const resetBtn = document.getElementById('reset-filters');
+        let currentUserId = null;
+        let allAlumniData = {};
+        let messageSenderIds = new Set();
+        async function fetchInitialData(){try{const[e,t]=await Promise.all([fetch("/api/user/id"),fetch("/api/messages/senders")]);if(e.ok){const t=await e.json();currentUserId=t.userId}if(t.ok){const e=await t.json();messageSenderIds=new Set(e)}}catch(e){console.error("Error fetching initial data:",e)}}
+        const createAlumniCard=e=>{const t=document.createElement("div");t.className="alumni-card bg-slate-800/50 backdrop-blur-md rounded-xl p-6 shadow-2xl transition-transform transform hover:-translate-y-2 duration-300 border border-sky-400/20 flex flex-col";const s=e._id===currentUserId,a=messageSenderIds.has(e._id.toString()),n=a?'<i class="fas fa-envelope text-sky-400 ml-2" title="You have a message from this user"></i>':"";let i="";s||(i=`\n            <div class="mt-auto pt-4 flex gap-2">\n                <button onclick="openConnectModal(event, '${e._id}')" class="flex-1 bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 text-sm">Connect</button>\n                <a href="/messages/${e._id}" class="flex-1 text-center bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 text-sm">Message</a>\n            </div>\n        `);const l=e.profilePictureUrl||`https://ui-avatars.com/api/?name=${encodeURIComponent(e.name)}&background=0ea5e9&color=fff&size=128`;return t.innerHTML=`\n        <a href="/profile/${e._id}" class="flex flex-col items-center text-center flex-grow">\n            <img class="w-24 h-24 rounded-full mb-4 object-cover border-4 border-sky-400/50" src="${l}" alt="${e.name}">\n            <div class="flex items-center justify-center">\n                <h3 class="text-xl font-semibold text-white">${e.name}</h3>\n                ${n}\n            </div>\n            <p class="text-sky-300 font-medium mt-1">${e.institute||"N/A"}</p>\n            <p class="text-slate-400 text-sm mt-1">Batch of ${e.batch||"N/A"}</p>\n            <p class="text-slate-400 text-sm mt-1">${e.current_company||"N/A"}</p>\n        </a>\n        ${i}\n    `,t};
+        function debounce(e,t){let s;return function(...a){clearTimeout(s),s=setTimeout(()=>e.apply(this,a),t)}}
+        const fetchAlumni=async()=>{const e=new URLSearchParams({name:searchInput.value,institute:instituteFilter.value,branch:branchFilter.value,batch:batchFilter.value,current_company:companyInput.value});try{const t=await fetch(`/api/alumni?${e.toString()}`),s=await t.json();renderAlumni(s)}catch(e){console.error("Error fetching alumni:",e),alumniGrid.innerHTML="",noResults.style.display="block"}};
+        const renderAlumni=e=>{alumniGrid.innerHTML="",allAlumniData={},0===e.length?(noResults.classList.remove("hidden"),noResults.style.display="block"):(noResults.classList.add("hidden"),noResults.style.display="none",e.forEach(e=>{allAlumniData[e._id]=e;const t=createAlumniCard(e);alumniGrid.appendChild(t)}))};
+        function openConnectModal(e,t){e.stopPropagation(),e.preventDefault();const s=allAlumniData[t],a=document.getElementById("modal-content"),n=s.linkedin_url?`<a href="${s.linkedin_url}" target="_blank" rel="noopener noreferrer" class="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center"><i class="fab fa-linkedin mr-2"></i>LinkedIn Profile</a>`:'<div class="w-full bg-gray-500 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center opacity-50 cursor-not-allowed"><i class="fab fa-linkedin mr-2"></i>Not Available</div>',i=s.email?`<a href="mailto:${s.email}" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center"><i class="fas fa-envelope mr-2"></i>Email</a>`:'<div class="w-full bg-gray-500 text-white font-bold py-3 px-4 rounded-lg flex items-center justify-center opacity-50 cursor-not-allowed"><i class="fas fa-envelope mr-2"></i>Not Available</div>';a.innerHTML=`\n      <h3 class="text-2xl font-bold mb-4">Connect with ${s.name}</h3>\n      <div class="space-y-4">\n        ${n}\n        ${i}\n      </div>\n    `,document.getElementById("connect-modal").classList.remove("hidden")}
+        function closeConnectModal(){document.getElementById("connect-modal").classList.add("hidden")}
+        const debouncedFetch=debounce(fetchAlumni,300);searchInput.addEventListener("input",debouncedFetch),instituteFilter.addEventListener("change",fetchAlumni),branchFilter.addEventListener("change",fetchAlumni),batchFilter.addEventListener("input",debouncedFetch),companyInput.addEventListener("input",debouncedFetch),resetBtn.addEventListener("click",()=>{searchInput.value="",instituteFilter.value="",branchFilter.value="",batchFilter.value="",companyInput.value="",fetchAlumni()}),(async()=>{await fetchInitialData(),fetchAlumni()})();
+    </script>
+</body>
+</html>

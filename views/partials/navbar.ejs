@@ -1,0 +1,45 @@
+<header class="bg-slate-900/80 text-white shadow-lg sticky top-0 z-50 backdrop-blur-lg">
+    <style>
+        .group:hover .group-hover-content {
+            display: block;
+        }
+        .dropdown-menu::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: -10px; /* Creates an invisible bridge above the dropdown */
+            height: 10px;
+            background: transparent;
+        }
+    </style>
+    <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+        <a href="/" class="text-2xl font-bold text-white flex items-center hover:text-sky-300 transition-colors">
+            <i class="fas fa-graduation-cap mr-2"></i><span>Alumni Connect</span>
+        </a>
+       
+        <div class="hidden md:flex items-center space-x-6">
+            <a href="/" class="hover:text-sky-300 transition-colors">Home</a>
+            <a href="/search" class="hover:text-sky-300 transition-colors">Directory</a> 
+            <a href="/events" class="hover:text-sky-300 transition-colors">Events</a>
+            <a href="/interview" class="hover:text-sky-300 transition-colors">Interviews</a>
+            <a href="/giving-back" class="hover:text-sky-300 transition-colors">Giving Back</a>
+            <a href="/contact" class="hover:text-sky-300 transition-colors">Contact</a>
+            <% if (isLoggedIn) { %>
+                <div class="relative group">
+                    <button class="bg-sky-500 hover:bg-sky-600 text-white font-semibold py-2 px-4 rounded-lg flex items-center transition-transform transform group-hover:scale-105">
+                        <span>My Account</span>
+                        <i class="fas fa-chevron-down ml-2 text-xs transition-transform group-hover:rotate-180"></i>
+                    </button>
+                    <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-20 hidden group-hover-content dropdown-menu transition-all duration-300 origin-top-right">
+                        <a href="/profile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Profile</a>
+                        <a href="/messages" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Messages</a> 
+                        <a href="/logout" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Logout</a>
+                    </div>
+                </div>
+            <% } else { %>
+                <a href="/login" class="bg-sky-500 hover:bg-sky-600 text-white font-semibold py-2 px-4 rounded-lg">Login / Register</a>
+            <% } %>
+        </div>
+    </nav>
+</header>

@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Giving Back - Alumni & Student Connect</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <style>
+      body { font-family: "Poppins", sans-serif; background-color: #f8fafc; }
+      .bg-deep-blue { background-color: #1e3d58; }
+      .text-deep-blue { color: #1e3d58; }
+      .progress-gradient { background-image: linear-gradient(to right, #3b82f6 0%, #1e3d58 100%); }
+      .donate-button:hover { box-shadow: 0 0 15px rgba(30, 61, 88, 0.6); }
+      .card-animate { opacity: 0; transform: translateY(30px); transition: opacity 0.6s ease-out, transform 0.6s ease-out; }
+      .card-animate.is-visible { opacity: 1; transform: translateY(0); }
+    </style>
+  </head>
+  <body class="antialiased">
+    <header class="bg-white shadow-sm sticky top-0 z-50">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="/" class="text-2xl font-bold text-deep-blue">
+                <i class="fas fa-graduation-cap mr-2"></i>Alumni Connect
+            </a>
+            <div class="flex items-center space-x-4">
+                <a href="/search" class="hidden md:block text-gray-700 hover:text-deep-blue transition-colors">Directory</a>
+                <a href="/events" class="hidden md:block text-gray-700 hover:text-deep-blue transition-colors">Events</a>
+                <a href="/giving-back" class="hidden md:block text-blue-600 font-semibold transition-colors">Giving Back</a>
+                <a href="/messages" class="hidden md:block text-gray-700 hover:text-deep-blue transition-colors">Messages</a>
+                <a href="/profile" class="bg-sky-500 hover:bg-sky-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors">My Profile</a>
+                <a href="/logout" class="bg-slate-700 hover:bg-slate-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors">Logout</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-6 py-12">
+      <div class="flex flex-col lg:flex-row gap-12">
+        <aside class="w-full lg:w-1/4">
+          <h2 class="text-xl font-bold text-gray-800 mb-6">CATEGORIES</h2>
+          <ul id="category-sidebar" class="space-y-2">
+            <li><a href="#" data-category="All" class="category-link flex justify-between items-center px-4 py-3 bg-gray-200 text-deep-blue font-semibold rounded-lg"><span>All</span><span id="count-all" class="text-sm font-bold">0</span></a></li>
+            <li><a href="#" data-category="Academic" class="category-link flex justify-between items-center px-4 py-3 text-gray-600 hover:bg-gray-100 rounded-lg"><span>Academic</span><span id="count-academic" class="text-sm font-bold">0</span></a></li>
+            <li><a href="#" data-category="Development" class="category-link flex justify-between items-center px-4 py-3 text-gray-600 hover:bg-gray-100 rounded-lg"><span>Development</span><span id="count-development" class="text-sm font-bold">0</span></a></li>
+            <li><a href="#" data-category="Social" class="category-link flex justify-between items-center px-4 py-3 text-gray-600 hover:bg-gray-100 rounded-lg"><span>Social</span><span id="count-social" class="text-sm font-bold">0</span></a></li>
+          </ul>
+        </aside>
+
+        <section class="w-full lg:w-3/4">
+          <h2 class="text-2xl font-bold text-gray-800 mb-2">CrowdFunding Initiatives</h2>
+          <div id="donation-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 gap-8">
+             <p class="text-gray-500">Loading initiatives...</p>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <div id="donation-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 hidden">
+        <div class="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
+            <h2 class="text-2xl font-bold text-deep-blue mb-4" id="modal-campaign-title">Donate Now</h2>
+            <form id="donation-form">
+                <div>
+                    <label for="amount" class="block text-sm font-medium text-gray-700">Amount (INR)</label>
+                    <input type="number" id="amount" name="amount" min="10" required class="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm">
+                </div>
+                <input type="hidden" id="campaign-id" name="campaignId">
+                <div class="mt-6 flex justify-end space-x-4">
+                    <button type="button" id="cancel-btn" class="bg-gray-200 text-gray-800 py-2 px-4 rounded-lg">Cancel</button>
+                    <button type="submit" class="bg-deep-blue text-white font-bold py-2 px-6 rounded-lg">Proceed to Pay</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const donationGrid = document.getElementById("donation-grid");
+        const categorySidebar = document.getElementById("category-sidebar");
+        let campaigns = [];
+        const donationModal = document.getElementById('donation-modal');
+        const donationForm = document.getElementById('donation-form');
+        const cancelBtn = document.getElementById('cancel-btn');
+        const modalCampaignTitle = document.getElementById('modal-campaign-title');
+        const campaignIdInput = document.getElementById('campaign-id');
+
+        async function fetchCampaigns() {
+          try {
+            const response = await fetch('/api/campaigns');
+            if (!response.ok) throw new Error('Could not fetch campaigns');
+            campaigns = await response.json();
+            updateCategoryCounts();
+            renderCards();
+          } catch (error) {
+            console.error(error);
+            donationGrid.innerHTML = `<p class="text-red-500">Could not load fundraising initiatives.</p>`;
+          }
+        }
+
+        const renderCards = (filter = "All") => {
+          donationGrid.innerHTML = "";
+          const filteredCampaigns = filter === "All" ? campaigns : campaigns.filter((c) => c.category === filter);
+
+          if (filteredCampaigns.length === 0) {
+              donationGrid.innerHTML = `<p class="text-gray-600 col-span-full text-center">No initiatives found in this category.</p>`;
+              return;
+          }
+          
+          filteredCampaigns.forEach((campaign) => {
+            const percentage = Math.min((campaign.raised / campaign.goal) * 100, 100);
+            const card = document.createElement("div");
+            card.className = "donation-card bg-white rounded-lg shadow-md overflow-hidden transform hover:-translate-y-1 hover:shadow-xl transition-all duration-300 card-animate flex flex-col md:flex-row items-center space-x-0 md:space-x-5 p-4";
+            card.innerHTML = `
+              <div class="flex-shrink-0 w-32 h-32 mb-4 md:mb-0">
+                  <img class="w-full h-full object-contain" src="${campaign.image}" alt="${campaign.title}">
+              </div>
+              <div class="w-full">
+                  <h3 class="text-lg font-bold text-deep-blue mb-2">${campaign.title}</h3>
+                  <p class="text-sm text-gray-600 mb-2">
+                      <span class="font-semibold">INR ${campaign.raised.toLocaleString("en-IN")}</span> raised of INR ${campaign.goal.toLocaleString("en-IN")} goal
+                  </p>
+                  <div class="w-full bg-gray-200 rounded-full h-2 mb-3">
+                      <div class="progress-gradient h-2 rounded-full" style="width: ${percentage}%;"></div>
+                  </div>
+                  <div class="flex justify-between items-center">
+                      <p class="text-sm font-semibold text-gray-700"><i class="fas fa-users mr-2 text-blue-500"></i>${campaign.donors} donors</p>
+                      <button class="bg-deep-blue text-white font-bold py-2 px-5 rounded-lg text-sm donate-button"
+                              data-campaign-id="${campaign._id}"
+                              data-campaign-title="${campaign.title}">
+                          <i class="fas fa-heart mr-2"></i>DONATE NOW
+                      </button>
+                  </div>
+              </div>`;
+            donationGrid.appendChild(card);
+          });
+          handleScrollAnimations();
+        };
+        
+        const updateCategoryCounts = () => {
+          const counts = { All: campaigns.length, Academic: 0, Development: 0, Social: 0 };
+          campaigns.forEach(c => { if(counts.hasOwnProperty(c.category)) counts[c.category]++; });
+          for (const key in counts) {
+            const el = document.getElementById(`count-${key.toLowerCase()}`);
+            if(el) el.textContent = counts[key];
+          }
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add("is-visible");
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.1 });
+
+        const handleScrollAnimations = () => {
+            document.querySelectorAll(".card-animate:not(.is-visible)").forEach(card => observer.observe(card));
+        };
+
+        categorySidebar.addEventListener("click", (e) => {
+            e.preventDefault();
+            const link = e.target.closest(".category-link");
+            if (link) {
+                document.querySelectorAll(".category-link").forEach(l => l.classList.remove("bg-gray-200", "text-deep-blue", "font-semibold"));
+                link.classList.add("bg-gray-200", "text-deep-blue", "font-semibold");
+                renderCards(link.dataset.category);
+            }
+        });
+
+        donationGrid.addEventListener('click', (e) => {
+            const button = e.target.closest('.donate-button');
+            if (button) {
+                modalCampaignTitle.textContent = `Donate to: ${button.dataset.campaignTitle}`;
+                campaignIdInput.value = button.dataset.campaignId;
+                donationModal.classList.remove('hidden');
+            }
+        });
+
+        cancelBtn.addEventListener('click', () => {
+            donationModal.classList.add('hidden');
+        });
+
+        donationForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const amount = document.getElementById('amount').value;
+            const campaignId = campaignIdInput.value;
+
+            try {
+                const orderRes = await fetch('/api/donations/order', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ amount })
+                });
+                if (!orderRes.ok) throw new Error('Could not create payment order.');
+                const order = await orderRes.json();
+                
+                const options = {
+                    key: "<%= razorpayKeyId %>",
+                    amount: order.amount,
+                    currency: order.currency,
+                    name: "Alumni Connect",
+                    description: `Donation for ${modalCampaignTitle.textContent.replace('Donate to: ','')}`,
+                    order_id: order.id,
+                    handler: async function (response) {
+                        try {
+                            const verificationRes = await fetch('/api/donations/verify', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    razorpay_order_id: response.razorpay_order_id,
+                                    razorpay_payment_id: response.razorpay_payment_id,
+                                    razorpay_signature: response.razorpay_signature,
+                                    campaignId: campaignId,
+                                    amount: amount
+                                })
+                            });
+                            
+                            if (!verificationRes.ok) {
+                                const errorData = await verificationRes.json();
+                                throw new Error(errorData.message || 'Payment verification failed on the server.');
+                            }
+
+                            const verificationData = await verificationRes.json();
+                            alert(verificationData.message || 'Payment complete!');
+                            donationModal.classList.add('hidden');
+                            fetchCampaigns();
+                        } catch (error) {
+                            alert(`An error occurred during verification: ${error.message}`);
+                        }
+                    },
+                    prefill: {
+                        name: "<%= user ? user.name : 'Alumni Member' %>",
+                        email: "<%= user ? user.email : '' %>"
+                    },
+                    theme: { color: "#1e3d58" }
+                };
+                const rzp = new Razorpay(options);
+                rzp.open();
+            } catch (error) {
+                alert(`Could not initiate payment. Please try again. Error: ${error.message}`);
+            }
+        });
+        
+        fetchCampaigns();
+      });
+    </script>
+  </body>
+</html>

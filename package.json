@@ -1,0 +1,50 @@
+{
+  "name": "alumni-connect-pro",
+  "version": "1.0.0",
+  "description": "Alumni Management System for College",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "seed": "node seeder.js",
+    "seed:destroy": "node seeder.js -d",
+    "server": "nodemon server.js",
+    "build:css": "tailwindcss -i ./public/css/input.css -o ./public/css/style.css --watch",
+    "dev": "concurrently \"npm run build:css\" \"npm run server\"",
+    "seeder": "node data/seeder.js"
+  },
+  "keywords": [
+    "alumni",
+    "management",
+    "college",
+    "express",
+    "mongoose"
+  ],
+  "author": "Rahul Subedi",
+  "license": "ISC",
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "bcryptjs": "^2.4.3",
+    "cloudinary": "^1.41.3",
+    "connect-mongo": "^5.1.0",
+    "dotenv": "^16.4.1",
+    "ejs": "^3.1.9",
+    "express": "^4.18.2",
+    "express-session": "^1.18.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.1.1",
+    "multer": "^2.0.2",
+    "multer-storage-cloudinary": "^4.0.0",
+    "nodemailer": "^7.0.6",
+    "pdf-parse": "^1.1.1",
+    "razorpay": "^2.9.6",
+    "socket.io": "^4.8.1",
+    "twilio": "^5.10.1"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.17",
+    "concurrently": "^9.2.1",
+    "nodemon": "^3.1.0",
+    "postcss": "^8.4.33",
+    "tailwindcss": "^3.4.1"
+  }
+}

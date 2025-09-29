@@ -1,0 +1,85 @@
+// data/campaignData.js
+const campaigns = [
+  {
+    category: "Academic",
+    image: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=2070&auto=format&fit=crop",
+    title: "Scholarship Fund for Underprivileged Students",
+    goal: 500000,
+    raised: 275000,
+    donors: 88,
+  },
+  {
+    category: "Development",
+    image: "https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?q=80&w=2070&auto=format&fit=crop",
+    title: "New Sports Complex & Gymnasium",
+    goal: 1000000,
+    raised: 450000,
+    donors: 120,
+  },
+  {
+    category: "Social",
+    image: "https://images.unsplash.com/photo-1618423284242-a4293a903333?q=80&w=2070&auto=format&fit=crop",
+    title: "Community Tech Literacy Program",
+    goal: 150000,
+    raised: 95000,
+    donors: 45,
+  },
+  {
+    category: "Academic",
+    image: "https://images.unsplash.com/photo-1531482615713-2c65778469a9?q=80&w=2070&auto=format&fit=crop",
+    title: "Upgrade Computer Lab Infrastructure",
+    goal: 750000,
+    raised: 680000,
+    donors: 210,
+  },
+  {
+    category: "Development",
+    image: "https://images.unsplash.com/photo-1504932314642-a55bde3b1b1c?q=80&w=2070&auto=format&fit=crop",
+    title: "Campus Beautification & Green Initiative",
+    goal: 200000,
+    raised: 110000,
+    donors: 63,
+  },
+  {
+    category: "Academic",
+    image: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=2070&auto=format&fit=crop",
+    title: "Startup Incubation Center Grant",
+    goal: 1500000,
+    raised: 850000,
+    donors: 35,
+  },
+  {
+    category: "Social",
+    image: "https://images.unsplash.com/photo-1593113598332-cd288d649433?q=80&w=2070&auto=format&fit=crop",
+    title: "Annual Alumni Mentorship Program",
+    goal: 50000,
+    raised: 45000,
+    donors: 150,
+  },
+  {
+    category: "Development",
+    image: "https://images.unsplash.com/photo-1517048676732-d65bc937f952?q=80&w=2070&auto=format&fit=crop",
+    title: "Renovation of the Central Auditorium",
+    goal: 2500000,
+    raised: 1800000,
+    donors: 95,
+  },
+  {
+    category: "Academic",
+    image: "https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=2070&auto=format&fit=crop",
+    title: "Sponsor a Student's Final Year Project",
+    goal: 300000,
+    raised: 300000,
+    donors: 75,
+  },
+  {
+    category: "Social",
+    image: "https://images.unsplash.com/photo-1543269865-cbf427effbad?q=80&w=2070&auto=format&fit=crop",
+    title: "Alumni Hardship Fund",
+    goal: 1000000,
+    raised: 150000,
+    donors: 25,
+  }
+];
+
+module.exports = campaigns;

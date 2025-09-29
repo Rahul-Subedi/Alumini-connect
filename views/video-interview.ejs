@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional Interview Room - Alumni Connect</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+    <script src="//media.twiliocdn.com/sdk/js/video/releases/2.26.2/twilio-video.min.js"></script>
+    <style>
+        html { background-color: #f1f5f9; }
+        body { font-family: 'Poppins', sans-serif; background-color: #f1f5f9; }
+        .view { transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out; }
+        .view.hidden { opacity: 0; transform: scale(0.95); pointer-events: none; position: absolute; }
+        
+        #video-grid {
+            width: 100%;
+            height: 100%;
+            display: grid;
+            gap: 1rem;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        }
+        .participant-container {
+            position: relative;
+            background: #1e293b;
+            border-radius: 0.75rem;
+            overflow: hidden;
+            aspect-ratio: 16 / 9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            transition: box-shadow 0.3s;
+        }
+        .participant-container video { width: 100%; height: 100%; object-fit: cover; }
+        .participant-identity {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            font-size: 0.875rem;
+            border-top-right-radius: 0.75rem;
+        }
+        #local-video-pip {
+            position: absolute;
+            bottom: 1rem;
+            right: 1rem;
+            width: 20%;
+            max-width: 250px;
+            z-index: 100;
+            border: 2px solid #38bdf8;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        #controls-bar {
+            position: absolute;
+            bottom: 1.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .status-icon-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: rgba(0,0,0,0.5);
+            color: white;
+            font-size: 2rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .status-icon-overlay.visible { opacity: 1; }
+    </style>
+</head>
+<body class="antialiased">
+    <%- include('partials/navbar') %>
+    <main class="container mx-auto px-4 py-6">
+        
+        <div id="controls-container" class="view flex items-center justify-center min-h-[80vh]">
+            <div class="w-full max-w-lg bg-white p-8 rounded-2xl shadow-xl border border-gray-200 text-center">
+                <h1 class="text-3xl font-bold text-slate-800">Interview Room</h1>
+                <p class="text-slate-500 mt-2 mb-8">Create a new private room or join an existing one.</p>
+
+                <div id="error-message" class="hidden text-red-500 bg-red-100 p-3 rounded-lg mb-6"></div>
+
+                <div class="space-y-4">
+                    <button id="createBtn" class="bg-sky-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-sky-600 w-full transition-transform transform hover:scale-105">Create New Room</button>
+                    <div id="room-id-display" class="hidden mt-4 p-3 bg-slate-100 rounded-md w-full text-center">
+                        <span class="font-mono text-slate-800" id="newRoomId"></span>
+                        <button id="copyBtn" class="ml-2 text-slate-500 hover:text-sky-500" title="Copy ID"><i class="fas fa-copy"></i></button>
+                    </div>
+                </div>
+
+                <div class="relative flex items-center my-6">
+                    <div class="flex-grow border-t border-gray-300"></div>
+                    <span class="flex-shrink mx-4 text-gray-400 text-sm">OR</span>
+                    <div class="flex-grow border-t border-gray-300"></div>
+                </div>
+
+                <div class="flex w-full">
+                    <input type="text" id="joinRoomId" placeholder="Enter Room ID to join..." class="border rounded-l-lg px-4 py-3 w-full focus:ring-2 focus:ring-sky-500 outline-none">
+                    <button id="joinBtn" class="bg-slate-700 text-white font-semibold px-6 rounded-r-lg hover:bg-slate-800">Join</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="call-container" class="view hidden" style="height: calc(100vh - 5rem);">
+            <div class="flex justify-between items-center mb-4 px-2">
+                <h1 class="text-xl font-bold text-slate-800">Room: <span id="displayRoomName" class="font-mono"></span></h1>
+                <div class="flex items-center gap-2 text-slate-600">
+                    <i class="fas fa-users"></i>
+                    <span id="participant-count" class="font-bold text-lg">0</span>
+                </div>
+            </div>
+            
+            <div id="video-grid-wrapper" class="p-2 relative bg-slate-200 rounded-xl shadow-inner flex-grow">
+                <div id="video-grid">
+                    <div id="grid-placeholder" class="participant-container bg-slate-700">
+                        <span class="text-slate-400">Waiting for others to join...</span>
+                    </div>
+                </div>
+                <div id="local-video-pip" class="participant-container">
+                    <div id="local-mic-status" class="status-icon-overlay"><i class="fas fa-microphone-slash"></i></div>
+                    <div id="local-cam-status" class="status-icon-overlay"><i class="fas fa-video-slash"></i></div>
+                </div>
+            </div>
+
+            <div id="controls-bar" class="p-3 rounded-full flex items-center justify-center gap-4 shadow-lg">
+                <button id="mic-btn" class="bg-white text-slate-700 w-12 h-12 rounded-full flex items-center justify-center text-xl hover:bg-slate-200 shadow-md">
+                    <i class="fas fa-microphone"></i>
+                </button>
+                <button id="camera-btn" class="bg-white text-slate-700 w-12 h-12 rounded-full flex items-center justify-center text-xl hover:bg-slate-200 shadow-md">
+                    <i class="fas fa-video"></i>
+                </button>
+                <button id="leave-btn" class="bg-red-600 text-white w-16 h-12 rounded-full flex items-center justify-center text-xl hover:bg-red-500 shadow-md">
+                    <i class="fas fa-phone-slash"></i>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Paste the full, correct JavaScript for the video call feature here.
+        // This is the script from our previous successful video-interview.ejs file.
+        let activeRoom = null, localTracks = [];
+        const controlsContainer = document.getElementById("controls-container"), callContainer = document.getElementById("call-container"), videoGrid = document.getElementById("video-grid"), localVideoPip = document.getElementById("local-video-pip"), errorMessageEl = document.getElementById("error-message");
+        const joinRoom = async roomName => {
+            console.log(`[DEBUG] Attempting to join room: "${roomName}"`);
+            try {
+                errorMessageEl.classList.add("hidden");
+                const response = await fetch("/api/interview/token", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ roomName })
+                });
+                if (!response.ok) throw new Error("Failed to get a valid access token from the server.");
+                const { token } = await response.json();
+                console.log("[DEBUG] Access token received.");
+                localTracks = await Twilio.Video.createLocalTracks({ audio: true, video: { name: "user-camera" } });
+                console.log("[DEBUG] Local tracks created.");
+                const room = await Twilio.Video.connect(token, { name: roomName, tracks: localTracks });
+                activeRoom = room;
+                console.log(`[SUCCESS] Successfully connected to room: "${room.name}"`);
+                setupRoomUI(room);
+                setupLocalMedia();
+                room.participants.forEach(participantConnected);
+                room.on("participantConnected", participantConnected);
+                room.on("participantDisconnected", participantDisconnected);
+                window.addEventListener("beforeunload", () => room.disconnect());
+                room.on("disconnected", () => cleanupAndResetUI("Disconnected from room."))
+            } catch (error) {
+                console.error("[ERROR] Connection failed:", error);
+                errorMessageEl.innerText = error.message || "Could not join the room. Please check the ID or your connection.";
+                errorMessageEl.classList.remove("hidden");
+                cleanupAndResetUI()
+            }
+        };
+        const setupRoomUI = room => {
+            controlsContainer.classList.add("hidden");
+            callContainer.classList.remove("hidden");
+            document.getElementById("displayRoomName").innerText = room.name;
+            updateParticipantCount()
+        };
+        const setupLocalMedia = () => {
+            const videoTrack = localTracks.find(track => "video" === track.kind);
+            if (videoTrack) {
+                localVideoPip.prepend(videoTrack.attach());
+                console.log("[DEBUG] Local video attached.")
+            }
+        };
+        const participantConnected = participant => {
+            console.log(`[DEBUG] Participant connected: ${participant.identity}`);
+            document.getElementById("grid-placeholder")?.remove();
+            const container = document.createElement("div");
+            container.id = participant.sid;
+            container.className = "participant-container";
+            const identityDiv = document.createElement("div");
+            identityDiv.className = "participant-identity";
+            identityDiv.innerText = participant.identity;
+            container.appendChild(identityDiv);
+            videoGrid.appendChild(container);
+            participant.on("trackSubscribed", track => {
+                console.log(`[DEBUG] Track subscribed from ${participant.identity}: ${track.kind}`);
+                container.appendChild(track.attach())
+            });
+            updateParticipantCount()
+        };
+        const participantDisconnected = participant => {
+            console.log(`[DEBUG] Participant disconnected: ${participant.identity}`);
+            document.getElementById(participant.sid)?.remove();
+            updateParticipantCount()
+        };
+        const cleanupAndResetUI = (message = "") => {
+            if (message) console.log(`[DEBUG] Cleaning up. Reason: ${message}`);
+            if (activeRoom) {
+                activeRoom.disconnect();
+                activeRoom = null
+            }
+            localTracks.forEach(track => track.stop());
+            localTracks = [];
+            videoGrid.innerHTML = '<div id="grid-placeholder" class="participant-container bg-slate-700"><span class="text-slate-400">Waiting for others to join...</span></div>';
+            localVideoPip.innerHTML = '<div id="local-mic-status" class="status-icon-overlay"><i class="fas fa-microphone-slash"></i></div><div id="local-cam-status" class="status-icon-overlay"><i class="fas fa-video-slash"></i></div>';
+            callContainer.classList.add("hidden");
+            controlsContainer.classList.remove("hidden");
+            document.getElementById("room-id-display").classList.add("hidden")
+        };
+        const updateParticipantCount = () => {
+            const count = activeRoom ? activeRoom.participants.size + 1 : 0;
+            document.getElementById("participant-count").innerText = count
+        };
+        document.getElementById("createBtn").onclick = () => {
+            const newRoomId = `connect-${Math.random().toString(36).substring(2,8)}`;
+            document.getElementById("newRoomId").innerText = newRoomId;
+            document.getElementById("room-id-display").classList.remove("hidden");
+            joinRoom(newRoomId)
+        };
+        document.getElementById("joinBtn").onclick = () => {
+            const roomId = document.getElementById("joinRoomId").value;
+            if (!roomId) {
+                errorMessageEl.innerText = "Please enter a Room ID.";
+                errorMessageEl.classList.remove("hidden");
+                return
+            }
+            joinRoom(roomId)
+        };
+        document.getElementById("copyBtn").onclick = () => {
+            navigator.clipboard.writeText(document.getElementById("newRoomId").innerText).then(() => {
+                const copyBtn = document.getElementById("copyBtn"),
+                    originalIcon = copyBtn.innerHTML;
+                copyBtn.innerHTML = '<i class="fas fa-check text-green-500"></i>';
+                setTimeout(() => {
+                    copyBtn.innerHTML = originalIcon
+                }, 2e3)
+            })
+        };
+        document.getElementById("leave-btn").onclick = () => cleanupAndResetUI("User clicked leave button.");
+        document.getElementById("mic-btn").onclick = () => {
+            const audioTrack = localTracks.find(track => "audio" === track.kind),
+                icon = document.querySelector("#mic-btn i"),
+                statusIcon = document.getElementById("local-mic-status");
+            if (audioTrack.isEnabled) {
+                audioTrack.disable();
+                icon.className = "fas fa-microphone-slash";
+                document.getElementById("mic-btn").classList.replace("bg-white", "bg-red-500");
+                document.getElementById("mic-btn").classList.add("text-white");
+                statusIcon.classList.add("visible")
+            } else {
+                audioTrack.enable();
+                icon.className = "fas fa-microphone";
+                document.getElementById("mic-btn").classList.replace("bg-red-500", "bg-white");
+                document.getElementById("mic-btn").classList.remove("text-white");
+                statusIcon.classList.remove("visible")
+            }
+        };
+        document.getElementById("camera-btn").onclick = () => {
+            const videoTrack = localTracks.find(track => "video" === track.kind),
+                icon = document.querySelector("#camera-btn i"),
+                statusIcon = document.getElementById("local-cam-status");
+            if (videoTrack.isEnabled) {
+                videoTrack.disable();
+                icon.className = "fas fa-video-slash";
+                document.getElementById("camera-btn").classList.replace("bg-white", "bg-red-500");
+                document.getElementById("camera-btn").classList.add("text-white");
+                statusIcon.classList.add("visible")
+            } else {
+                videoTrack.enable();
+                icon.className = "fas fa-video";
+                document.getElementById("camera-btn").classList.replace("bg-red-500", "bg-white");
+                document.getElementById("camera-btn").classList.remove("text-white");
+                statusIcon.classList.remove("visible")
+            }
+        };
+    </script>
+</body>
+</html>
