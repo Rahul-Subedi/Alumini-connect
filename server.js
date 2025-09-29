@@ -4,6 +4,7 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const session = require('express-session');
+const MongoStore = require('connect-mongo'); // Import connect-mongo
 const http = require('http');
 const { Server } = require('socket.io');
 const connectDB = require('./config/database');
@@ -46,10 +47,15 @@ const io = new Server(server);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
+
+// UPDATE THIS SESSION CONFIGURATION
 app.use(session({
     secret: process.env.SESSION_SECRET || 'fallbacksecret',
     resave: false,
     saveUninitialized: false,
+    store: MongoStore.create({ 
+        mongoUrl: process.env.MONGO_URI 
+    }),
     cookie: {
       secure: process.env.NODE_ENV === 'production',
       httpOnly: true,
@@ -194,9 +200,7 @@ app.post('/api/scan-resume', isAuthenticated, upload.single('resume'), async (re
             Return the response in a JSON format like this:
             { "score": 85, "strengths": "The resume strongly highlights experience in Node.js and database management, which are key requirements.", "improvements": "To improve, add more quantifiable results to project descriptions and include keywords like 'agile methodologies' from the job description." }
         `;
-
-        // 4. Call the Gemini API with the UPDATED model name
-        // The only change is on the next line
+        
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash"});
         const result = await model.generateContent(prompt);
         const response = await result.response;
