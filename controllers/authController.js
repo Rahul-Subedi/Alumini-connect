@@ -14,18 +14,24 @@ const generateToken = (id) => {
 const registerUser = async (req, res) => {
   const { name, email, password, institute, role, batch, contact } = req.body;
   try {
-    const userExists = await User.findOne({ email });
-    if (userExists && userExists.verification.status === 'verified') {
+    let user = await User.findOne({ email });
+
+    // Case 1: User exists and is already verified
+    if (user && user.verification.status === 'verified') {
       return res.render('login', { error: 'A verified user with this email already exists.' });
     }
 
-    let user = userExists || new User({ email });
+    // Case 2: User does not exist, so create a new one
+    if (!user) {
+      user = new User({ email });
+    }
 
+    // Case 3: Update details for new or existing (but unverified) user
     user.set({ name, password, institute, role, batch, contact });
     user.verification = {
         status: 'pending_email',
         otp: crypto.randomInt(100000, 999999).toString(),
-        otpExpires: Date.now() + 10 * 60 * 1000
+        otpExpires: Date.now() + 10 * 60 * 1000 // OTP expires in 10 minutes
     };
     await user.save();
     
@@ -39,7 +45,7 @@ const registerUser = async (req, res) => {
   }
 };
 
-// ADDED: Path 2: Register with personal email and document
+// Path 2: Register with personal email and document
 const registerWithDocument = async (req, res) => {
     const { name, email, password, institute, batch, branch, contact } = req.body;
 
@@ -68,8 +74,7 @@ const registerWithDocument = async (req, res) => {
             }
         });
         await user.save();
-
-        // Redirect to a success/pending page (we can create this later)
+        
         res.send('<h1>Thank you!</h1><p>Your registration has been submitted and is pending admin approval. You will be notified via email once your account is verified.</p><a href="/login">Back to Login</a>');
 
     } catch (error) {
@@ -116,7 +121,9 @@ const loginUser = async (req, res) => {
           if (user.verification.status === 'pending_approval') {
               errorMsg = 'Your account is pending admin approval.';
           } else if (user.verification.status === 'pending_email') {
-              errorMsg = 'Please verify your email with the OTP.';
+              // Resend OTP logic could be added here if desired
+              res.redirect(`/verify?email=${encodeURIComponent(user.email)}`);
+              return;
           }
           return res.render('login', { error: errorMsg });
       }
