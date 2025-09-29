@@ -53,6 +53,11 @@
         .btn-primary:hover {
             background-color: #4338ca;
         }
+        /* Style for the disabled button */
+        .btn-primary:disabled {
+            background-color: #a5b4fc;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen">
@@ -74,75 +79,30 @@
                 <label for="login-password" class="block text-sm font-medium text-gray-700">Password</label>
                 <input type="password" id="login-password" name="password" required class="mt-1 block w-full form-input">
             </div>
-            <button type="submit" class="btn-primary">
-                Log In
-            </button>
+            <button type="submit" class="btn-primary">Log In</button>
         </form>
 
         <form id="register-form" action="/auth/register" method="POST" class="space-y-6 hidden">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label for="register-name" class="block text-sm font-medium text-gray-700">Full Name</label>
-                    <input type="text" id="register-name" name="name" required class="mt-1 block w-full form-input">
-                </div>
-                <div>
-                    <label for="register-email" class="block text-sm font-medium text-gray-700">Institute Email</label>
-                    <input type="email" id="register-email" name="email" placeholder="e.g., name@iitb.ac.in" required class="mt-1 block w-full form-input">
-                </div>
-                <div>
-                    <label for="register-password" class="block text-sm font-medium text-gray-700">Password</label>
-                    <input type="password" id="register-password" name="password" required class="mt-1 block w-full form-input">
-                </div>
-                 <div>
-                    <label for="register-contact" class="block text-sm font-medium text-gray-700">Contact No.</label>
-                    <input type="text" id="register-contact" name="contact" required class="mt-1 block w-full form-input">
-                </div>
+                <div><label for="register-name" class="block text-sm font-medium text-gray-700">Full Name</label><input type="text" id="register-name" name="name" required class="mt-1 block w-full form-input"></div>
+                <div><label for="register-email" class="block text-sm font-medium text-gray-700">Institute Email</label><input type="email" id="register-email" name="email" placeholder="e.g., name@iitb.ac.in" required class="mt-1 block w-full form-input"></div>
+                <div><label for="register-password" class="block text-sm font-medium text-gray-700">Password</label><input type="password" id="register-password" name="password" required class="mt-1 block w-full form-input"></div>
+                <div><label for="register-contact" class="block text-sm font-medium text-gray-700">Contact No.</label><input type="text" id="register-contact" name="contact" required class="mt-1 block w-full form-input"></div>
             </div>
-
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                    <label for="register-institute" class="block text-sm font-medium text-gray-700">Institute</label>
-                    <select id="register-institute" name="institute" required class="mt-1 block w-full form-input">
-                        <option value="" disabled selected>Select your institute</option>
-                        <option value="IIT Bombay">IIT Bombay</option>
-                        <option value="IIT Delhi">IIT Delhi</option>
-                        <option value="NIT Durgapur">NIT Durgapur</option>
-                        <option value="NIT Trichy">NIT Trichy</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="register-batch" class="block text-sm font-medium text-gray-700">Batch/Year</label>
-                    <input type="text" id="register-batch" name="batch" placeholder="e.g. 2022" required class="mt-1 block w-full form-input">
-                </div>
-                <div>
-                    <label for="register-branch" class="block text-sm font-medium text-gray-700">Branch</label>
-                    <input type="text" id="register-branch" name="branch" required class="mt-1 block w-full form-input">
-                </div>
+                <div><label for="register-institute" class="block text-sm font-medium text-gray-700">Institute</label><select id="register-institute" name="institute" required class="mt-1 block w-full form-input"><option value="" disabled selected>Select your institute</option><option value="IIT Bombay">IIT Bombay</option><option value="IIT Delhi">IIT Delhi</option><option value="NIT Durgapur">NIT Durgapur</option><option value="NIT Trichy">NIT Trichy</option></select></div>
+                <div><label for="register-batch" class="block text-sm font-medium text-gray-700">Batch/Year</label><input type="text" id="register-batch" name="batch" placeholder="e.g. 2022" required class="mt-1 block w-full form-input"></div>
+                <div><label for="register-branch" class="block text-sm font-medium text-gray-700">Branch</label><input type="text" id="register-branch" name="branch" required class="mt-1 block w-full form-input"></div>
             </div>
-
             <div class="space-y-2">
                 <label class="block text-sm font-medium text-gray-700">Are you an Alumni or Student?</label>
                 <div class="flex space-x-4">
-                    <div class="flex items-center">
-                        <input type="radio" id="role-alumni" name="role" value="alumni" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300" checked>
-                        <label for="role-alumni" class="ml-2 text-gray-700">Alumni</label>
-                    </div>
-                    <div class="flex items-center">
-                        <input type="radio" id="role-student" name="role" value="student" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300">
-                        <label for="role-student" class="ml-2 text-gray-700">Student</label>
-                    </div>
+                    <div class="flex items-center"><input type="radio" id="role-alumni" name="role" value="alumni" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300" checked><label for="role-alumni" class="ml-2 text-gray-700">Alumni</label></div>
+                    <div class="flex items-center"><input type="radio" id="role-student" name="role" value="student" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300"><label for="role-student" class="ml-2 text-gray-700">Student</label></div>
                 </div>
             </div>
-            
-            <button type="submit" class="btn-primary">
-                Register & Send OTP
-            </button>
-            
-            <div class="text-center text-sm mt-4">
-                <a href="/register-document" class="font-medium text-indigo-600 hover:text-indigo-500">
-                    Alumnus without an institute email? Register with a document.
-                </a>
-            </div>
+            <button id="register-btn" type="submit" class="btn-primary">Register & Send OTP</button>
+            <div class="text-center text-sm mt-4"><a href="/register-document" class="font-medium text-indigo-600 hover:text-indigo-500">Alumnus without an institute email? Register with a document.</a></div>
         </form>
         
         <div class="mt-6 text-center text-sm">
@@ -157,9 +117,9 @@
         const toggleFormBtn = document.getElementById('toggle-form-btn');
         const toggleFormText = document.getElementById('toggle-form-text');
         const formTitle = document.getElementById('form-title');
+        const registerBtn = document.getElementById('register-btn'); // Get the register button
 
         let isLogin = true;
-
         function toggleForm() {
             isLogin = !isLogin;
             if (!isLogin) {
@@ -178,8 +138,17 @@
                 authContainer.classList.remove('register-mode');
             }
         }
-
         toggleFormBtn.addEventListener('click', toggleForm);
+
+        // START: Added logic for form submission feedback
+        registerForm.addEventListener('submit', function() {
+            registerBtn.disabled = true;
+            registerBtn.innerHTML = `
+                <i class="fas fa-spinner fa-spin mr-2"></i>
+                Sending OTP...
+            `;
+        });
+        // END: Added logic
     </script>
 </body>
 </html>

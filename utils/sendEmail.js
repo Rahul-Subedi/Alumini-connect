@@ -1,41 +1,32 @@
-const nodemailer = require('nodemailer');
+// utils/sendEmail.js
+const sgMail = require('@sendgrid/mail');
+
+// Set the API key from your environment variables
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 const sendEmail = async (options) => {
-    console.log('--- Attempting to send email ---');
-    console.log('EMAIL_USER:', process.env.EMAIL_USER ? 'Loaded' : 'MISSING!');
-    console.log('EMAIL_PASS:', process.env.EMAIL_PASS ? 'Loaded' : 'MISSING!');
-
-    const transporter = nodemailer.createTransport({
-        host: "smtp.gmail.com",
-        port: 587,      // Using the alternative secure port
-        secure: false,  // This must be false for port 587
-        auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS,
-        },
-    });
-
-    try {
-        await transporter.verify();
-        console.log('Nodemailer transporter is verified and ready to send emails.');
-    } catch (error) {
-        console.error('Nodemailer transporter verification failed:', error);
-        throw new Error('Email transporter verification failed. Check credentials and server network rules.');
-    }
-
-    const mailOptions = {
-        from: `Alumni Connect <${process.env.EMAIL_USER}>`,
+    // Construct the email message
+    const msg = {
         to: options.email,
+        from: {
+            name: 'Alumni Connect',
+            email: process.env.EMAIL_USER // Your verified sender email
+        },
         subject: options.subject,
         text: options.message,
     };
 
     try {
-        let info = await transporter.sendMail(mailOptions);
-        console.log('Email sent successfully! Message ID:', info.messageId);
+        console.log('--- Attempting to send email via SendGrid ---');
+        await sgMail.send(msg);
+        console.log('Email sent successfully via SendGrid!');
     } catch (error) {
-        console.error('Failed to send email:', error);
-        throw error;
+        console.error('Error sending email via SendGrid:', error);
+        // This helps debug if the error is from SendGrid's side
+        if (error.response) {
+            console.error(error.response.body)
+        }
+        throw new Error('Failed to send email.');
     }
 };
 
